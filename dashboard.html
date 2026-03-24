@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Prabhava Systems</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dashboard-page">
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <img src="logo.png" alt="Logo" height="40">
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active"><i class="fas fa-th-large"></i> Overview</a>
+                <a href="#" class="nav-item"><i class="fas fa-chart-line"></i> Analytics</a>
+                <a href="#" class="nav-item"><i class="fas fa-microchip"></i> Devices</a>
+                <a href="#" class="nav-item"><i class="fas fa-bell"></i> Alerts</a>
+                <a href="#" class="nav-item"><i class="fas fa-cog"></i> Settings</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button onclick="toggleTheme()" class="nav-item btn-block" style="background:transparent; border:none; cursor:pointer;">
+                    <i id="theme-icon" class="fas fa-moon"></i> Dark Mode
+                </button>
+                <button onclick="auth.signOut()" class="nav-item btn-block" style="color: #EF4444; background:transparent; border:none; cursor:pointer;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="dashboard-header-ui">
+                <div>
+                    <h1 id="welcome-user">Hello, User</h1>
+                    <p class="text-muted">Here's what's happening with your environment today.</p>
+                </div>
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=User&background=random" id="user-avatar" alt="Avatar" style="width: 48px; height: 48px; border-radius: 50%;">
+                </div>
+            </header>
+
+            <!-- Alert Section -->
+            <div class="alert-banner animate-up">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span><strong>High Alert:</strong> PM2.5 levels in your area have exceeded safe limits. Stay indoors.</span>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="metrics-grid">
+                <div class="metric-card animate-up" style="animation-delay: 0.1s;">
+                    <span class="metric-label">AQI Index</span>
+                    <div class="metric-main">
+                        <span class="metric-value" id="dash-aqi">42</span>
+                        <span class="metric-unit">Good</span>
+                    </div>
+                    <div class="trend down"><i class="fas fa-arrow-down"></i> 12% lower than yesterday</div>
+                </div>
+                <div class="metric-card animate-up" style="animation-delay: 0.2s;">
+                    <span class="metric-label">CO2 Levels</span>
+                    <div class="metric-main">
+                        <span class="metric-value">412</span>
+                        <span class="metric-unit">ppm</span>
+                    </div>
+                    <div class="trend stable">Stable</div>
+                </div>
+                <div class="metric-card animate-up" style="animation-delay: 0.3s;">
+                    <span class="metric-label">Temperature</span>
+                    <div class="metric-main">
+                        <span class="metric-value">24.5</span>
+                        <span class="metric-unit">°C</span>
+                    </div>
+                    <div class="trend up"><i class="fas fa-arrow-up"></i> 2°C increase</div>
+                </div>
+                <div class="metric-card animate-up" style="animation-delay: 0.4s;">
+                    <span class="metric-label">Humidity</span>
+                    <div class="metric-main">
+                        <span class="metric-value">58</span>
+                        <span class="metric-unit">%</span>
+                    </div>
+                    <div class="trend down"><i class="fas fa-arrow-down"></i> 5% drop</div>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="chart-box animate-up" style="animation-delay: 0.5s;">
+                <div class="chart-header">
+                    <h3>Pollution Trends (24h)</h3>
+                    <div class="chart-actions">
+                        <span class="active">Live</span>
+                        <span>Daily</span>
+                        <span>Weekly</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="dashboardChart"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        // Check Auth on Load
+        async function checkAuth() {
+            const user = await auth.getUser();
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Set User Data
+            const name = user.user_metadata.full_name || user.email.split('@')[0];
+            document.getElementById('welcome-user').textContent = `Hello, ${name}`;
+            document.getElementById('user-avatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
+        }
+
+        checkAuth();
+        initTheme();
+
+        // Initialize Chart
+        const ctx = document.getElementById('dashboardChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['12am', '4am', '8am', '12pm', '4pm', '8pm'],
+                datasets: [{
+                    label: 'AQI Level',
+                    data: [35, 38, 65, 52, 48, 42],
+                    borderColor: '#22C55E',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Live AQI Simulation
+        setInterval(() => {
+            const val = Math.floor(Math.random() * 20) + 30;
+            document.getElementById('dash-aqi').textContent = val;
+        }, 5000);
+    </script>
+</body>
+</html>
