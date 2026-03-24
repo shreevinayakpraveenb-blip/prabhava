@@ -11,6 +11,7 @@
 </head>
 <body class="dashboard-page">
     <div class="dashboard-layout">
+        
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-logo">
@@ -53,107 +54,125 @@
 
             <!-- Stats Grid -->
             <div class="metrics-grid">
-                <div class="metric-card animate-up" style="animation-delay: 0.1s;">
+                <div class="metric-card animate-up">
                     <span class="metric-label">AQI Index</span>
                     <div class="metric-main">
-                        <span class="metric-value" id="dash-aqi">42</span>
-                        <span class="metric-unit">Good</span>
+                        <span class="metric-value" id="dash-aqi">Loading...</span>
+                        <span class="metric-unit" id="aqi-status">--</span>
                     </div>
-                    <div class="trend down"><i class="fas fa-arrow-down"></i> 12% lower than yesterday</div>
+                    <div class="trend" id="aqi-city">Detecting location...</div>
                 </div>
-                <div class="metric-card animate-up" style="animation-delay: 0.2s;">
+
+                <div class="metric-card animate-up">
                     <span class="metric-label">CO2 Levels</span>
                     <div class="metric-main">
                         <span class="metric-value">412</span>
                         <span class="metric-unit">ppm</span>
                     </div>
-                    <div class="trend stable">Stable</div>
                 </div>
-                <div class="metric-card animate-up" style="animation-delay: 0.3s;">
+
+                <div class="metric-card animate-up">
                     <span class="metric-label">Temperature</span>
                     <div class="metric-main">
                         <span class="metric-value">24.5</span>
                         <span class="metric-unit">°C</span>
                     </div>
-                    <div class="trend up"><i class="fas fa-arrow-up"></i> 2°C increase</div>
                 </div>
-                <div class="metric-card animate-up" style="animation-delay: 0.4s;">
+
+                <div class="metric-card animate-up">
                     <span class="metric-label">Humidity</span>
                     <div class="metric-main">
                         <span class="metric-value">58</span>
                         <span class="metric-unit">%</span>
                     </div>
-                    <div class="trend down"><i class="fas fa-arrow-down"></i> 5% drop</div>
                 </div>
             </div>
 
-            <!-- Chart Section -->
-            <div class="chart-box animate-up" style="animation-delay: 0.5s;">
-                <div class="chart-header">
-                    <h3>Pollution Trends (24h)</h3>
-                    <div class="chart-actions">
-                        <span class="active">Live</span>
-                        <span>Daily</span>
-                        <span>Weekly</span>
-                    </div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="dashboardChart"></canvas>
-                </div>
+            <!-- Chart -->
+            <div class="chart-box animate-up">
+                <canvas id="dashboardChart"></canvas>
             </div>
         </main>
     </div>
 
     <script src="auth.js"></script>
+
     <script>
-        // Check Auth on Load
+        // 🔐 Auth check
         async function checkAuth() {
             const user = await auth.getUser();
             if (!user) {
                 window.location.href = 'login.html';
                 return;
             }
-            
-            // Set User Data
-            const name = user.user_metadata.full_name || user.email.split('@')[0];
+
+            const name = user.user_metadata?.full_name || user.email.split('@')[0];
             document.getElementById('welcome-user').textContent = `Hello, ${name}`;
-            document.getElementById('user-avatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
         }
 
         checkAuth();
-        initTheme();
 
-        // Initialize Chart
+        // 🌍 IP se location
+        async function getLocationFromIP() {
+            const res = await fetch("https://ipapi.co/json/");
+            const data = await res.json();
+            return {
+                lat: data.latitude,
+                lon: data.longitude,
+                city: data.city
+            };
+        }
+
+        // 🌫️ AQI fetch
+        async function getAQI(lat, lon) {
+            const apiKey = "38659b644448994cb2e78005cd7cbb1d"; // 🔥 yaha apni key daal
+
+            const res = await fetch(
+                `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`
+            );
+
+            const data = await res.json();
+            return data.list[0].main.aqi;
+        }
+
+        // 🎯 Main function
+        async function loadAQI() {
+            try {
+                const loc = await getLocationFromIP();
+                const aqi = await getAQI(loc.lat, loc.lon);
+
+                document.getElementById("dash-aqi").textContent = aqi;
+                document.getElementById("aqi-city").textContent = `📍 ${loc.city}`;
+
+                let status = "Good";
+                let color = "green";
+
+                if (aqi >= 4) { status = "Poor"; color = "red"; }
+                else if (aqi == 3) { status = "Moderate"; color = "orange"; }
+
+                document.getElementById("aqi-status").textContent = status;
+                document.getElementById("dash-aqi").style.color = color;
+
+            } catch (err) {
+                document.getElementById("dash-aqi").textContent = "Error";
+            }
+        }
+
+        loadAQI();
+
+        // 📊 Chart
         const ctx = document.getElementById('dashboardChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
             data: {
                 labels: ['12am', '4am', '8am', '12pm', '4pm', '8pm'],
                 datasets: [{
-                    label: 'AQI Level',
                     data: [35, 38, 65, 52, 48, 42],
                     borderColor: '#22C55E',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    fill: true,
-                    tension: 0.4
+                    fill: true
                 }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
-                    x: { grid: { display: false } }
-                }
             }
         });
-
-        // Live AQI Simulation
-        setInterval(() => {
-            const val = Math.floor(Math.random() * 20) + 30;
-            document.getElementById('dash-aqi').textContent = val;
-        }, 5000);
     </script>
 </body>
 </html>
