@@ -1,87 +1,59 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signup - Prabhava Systems</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Signup</title>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="auth-page">
-    <div class="auth-card animate-up">
-        <div class="auth-header">
-            <h1>Create Account</h1>
-            <p>Join Prabhava Systems today</p>
-        </div>
-        
-        <form id="signup-form" class="auth-form">
-            <div class="form-group">
-                <label>Full Name</label>
-                <input type="text" id="fullName" placeholder="Enter your full name" required>
-            </div>
+<body>
 
-            <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" id="email" placeholder="name@company.com" required>
-            </div>
+<h2>Signup</h2>
 
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="password" placeholder="••••••••" required minlength="6">
-            </div>
+<form id="signup-form">
+    <input type="text" id="fullName" placeholder="Full Name" required><br><br>
+    <input type="email" id="email" placeholder="Email" required><br><br>
+    <input type="password" id="password" placeholder="Password" required><br><br>
 
-            <button type="submit" class="btn btn-cta btn-block" id="signup-btn">
-                <span>Sign Up</span>
-            </button>
-        </form>
+    <button type="submit" id="btn">Sign Up</button>
+</form>
 
-        <div class="auth-footer">
-            <p>Already have an account? <a href="login.html">Log In</a></p>
-        </div>
-    </div>
+<script src="auth.js"></script>
 
-    <script src="auth.js"></script>
+<script>
+document.getElementById("signup-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-    <script>
-        const form = document.getElementById('signup-form');
+    const btn = document.getElementById("btn");
+    btn.innerText = "Processing...";
+    btn.disabled = true;
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+    const name = document.getElementById("fullName").value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-            const btn = document.getElementById('signup-btn');
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const fullName = document.getElementById('fullName').value.trim();
+    try {
+        const { data, error } = await auth.signUp(email, password, name);
 
-            if (!email || !password || !fullName) {
-                alert("All fields required ❌");
-                return;
-            }
+        if (error) {
+            alert(error.message);
+            btn.innerText = "Sign Up";
+            btn.disabled = false;
+            return;
+        }
 
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        alert("Signup success ✅");
+        window.location.href = "login.html";
 
-            try {
-                const { data, error } = await auth.signUp(email, password, fullName);
+    } catch (err) {
+        alert("Error ❌");
+        console.log(err);
+        btn.innerText = "Sign Up";
+        btn.disabled = false;
+    }
+});
+</script>
 
-                if (error) {
-                    alert(error.message);
-                    btn.disabled = false;
-                    btn.innerHTML = '<span>Sign Up</span>';
-                    return;
-                }
-
-                alert("Signup successful ✅");
-                window.location.href = "login.html";
-
-            } catch (err) {
-                console.error(err);
-                alert("Something went wrong ❌");
-                btn.disabled = false;
-                btn.innerHTML = '<span>Sign Up</span>';
-            }
-        });
-    </script>
 </body>
 </html>
