@@ -1,31 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signup</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signup - Prabhava</title>
 
-    <link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- ✅ Supabase CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body{
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+}
+
+.card{
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+    padding:40px;
+    border-radius:20px;
+    width:320px;
+    text-align:center;
+    color:white;
+    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+}
+
+.card h2{
+    margin-bottom:20px;
+}
+
+.input{
+    width:100%;
+    padding:12px;
+    margin:10px 0;
+    border:none;
+    border-radius:10px;
+    outline:none;
+}
+
+.btn{
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border:none;
+    border-radius:10px;
+    background:#3b82f6;
+    color:white;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.btn:hover{
+    background:#2563eb;
+}
+
+.link{
+    margin-top:15px;
+    font-size:14px;
+}
+
+.link a{
+    color:#3b82f6;
+    text-decoration:none;
+}
+</style>
+
 </head>
 
 <body>
 
-<div style="max-width:400px; margin:100px auto; text-align:center;">
-    <h2>Signup</h2>
+<div class="card">
+    <h2>Create Account</h2>
 
-    <input type="text" id="name" placeholder="Full Name"><br><br>
-    <input type="email" id="email" placeholder="Email"><br><br>
-    <input type="password" id="password" placeholder="Password"><br><br>
+    <input type="text" id="name" class="input" placeholder="Full Name">
+    <input type="email" id="email" class="input" placeholder="Email">
+    <input type="password" id="password" class="input" placeholder="Password">
 
-    <button onclick="signup()">Sign Up</button>
+    <button class="btn" onclick="signup()">Sign Up</button>
+
+    <div class="link">
+        Already have account? <a href="login.html">Login</a>
+    </div>
 </div>
 
 <script>
 
-// ✅ IMPORTANT FIX
 const client = supabase.createClient(
     "https://pkgaxclfrhaguzbckfdx.supabase.co",
     "sb_publishable_o9oXYMlV59VSZ_rznHdDKg_64yVVY1F"
@@ -37,7 +107,7 @@ async function signup(){
     const password = document.getElementById("password").value;
     const name = document.getElementById("name").value;
 
-    const { data, error } = await client.auth.signUp({
+    const { error } = await client.auth.signUp({
         email,
         password,
         options:{
@@ -48,7 +118,7 @@ async function signup(){
     if(error){
         alert(error.message);
     }else{
-        alert("Signup success!");
+        alert("Signup successful 🚀");
         window.location.href = "login.html";
     }
 }
