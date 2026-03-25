@@ -1,123 +1,108 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Prabhava Systems</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Dashboard</title>
 
-    <!-- 🔥 CDN FIX -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="dashboard-page">
-    <div class="dashboard-layout">
-        
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-logo">
-                <img src="logo.png" height="40">
-            </div>
 
-            <nav class="sidebar-nav">
-                <a class="nav-item active">Overview</a>
-            </nav>
+<body style="font-family: Arial; padding:20px;">
 
-            <div class="sidebar-footer">
-                <button onclick="auth.signOut()">Logout</button>
-            </div>
-        </aside>
+<h1 id="welcome-user">Loading...</h1>
 
-        <!-- Main -->
-        <main class="main-content">
-            <h1 id="welcome-user">Hello User</h1>
+<h2>AQI: <span id="dash-aqi">--</span></h2>
+<h3 id="aqi-status">--</h3>
+<p id="aqi-city">Detecting location...</p>
 
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <h3>AQI</h3>
-                    <h2 id="dash-aqi">Loading...</h2>
-                    <p id="aqi-status">--</p>
-                    <p id="aqi-city">Detecting...</p>
-                </div>
-            </div>
+<button onclick="auth.signOut()">Logout</button>
 
-            <canvas id="dashboardChart"></canvas>
-        </main>
-    </div>
+<script src="auth.js"></script>
 
-    <script src="auth.js"></script>
+<script>
 
-    <script>
-        // 🔐 Auth check
-        async function checkAuth() {
-            const user = await auth.getUser();
-            if (!user) {
-                window.location.href = "login.html";
-                return;
-            }
+// 🔐 Auth Check
+async function checkAuth() {
+    const user = await auth.getUser();
 
-            const name = user.user_metadata?.full_name || user.email;
-            document.getElementById("welcome-user").innerText = "Hello " + name;
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    document.getElementById("welcome-user").innerText =
+        "Hello " + (user.user_metadata?.full_name || user.email);
+}
+
+checkAuth();
+
+
+// 🔥 MAIN AQI FUNCTION
+async function loadAQI() {
+
+    if (!navigator.geolocation) {
+        alert("Location not supported ❌");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        // 🌫️ AQI API
+        const res = await fetch(
+            `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=38659b644448994cb2e78005cd7cbb1d`
+        );
+
+        const data = await res.json();
+
+        const pm25 = data.list[0].components.pm2_5;
+
+        // 🔥 REAL AQI CALCULATION
+        function calculateAQI(pm) {
+            if (pm <= 12) return Math.round((50/12)*pm);
+            if (pm <= 35.4) return Math.round(((100-51)/(35.4-12))*(pm-12)+51);
+            if (pm <= 55.4) return Math.round(((150-101)/(55.4-35.4))*(pm-35.4)+101);
+            if (pm <= 150.4) return Math.round(((200-151)/(150.4-55.4))*(pm-55.4)+151);
+            if (pm <= 250.4) return Math.round(((300-201)/(250.4-150.4))*(pm-150.4)+201);
+            return 400;
         }
 
-        checkAuth();
+        const aqi = calculateAQI(pm25);
 
-        // 🌍 GPS AQI
-        async function loadAQI() {
-            if (!navigator.geolocation) {
-                alert("Location not supported ❌");
-                return;
-            }
+        document.getElementById("dash-aqi").innerText = aqi;
 
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
+        // 📍 CITY NAME
+        const geo = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
+        );
 
-                try {
-                    const res = await fetch(
-                        `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=38659b644448994cb2e78005cd7cbb1d`
-                    );
+        const geoData = await geo.json();
+        const city = geoData.city || geoData.locality || geoData.principalSubdivision;
 
-                    const data = await res.json();
-                    const aqi = data.list[0].main.aqi;
+        document.getElementById("aqi-city").innerText = "📍 " + city;
 
-                    document.getElementById("dash-aqi").innerText = aqi;
-                    document.getElementById("aqi-city").innerText = "📍 Your Location";
+        // 🎨 STATUS + COLOR
+        let status = "Good";
+        let color = "green";
 
-                    let status = "Good";
-                    let color = "green";
+        if (aqi > 50) { status = "Moderate"; color = "orange"; }
+        if (aqi > 100) { status = "Unhealthy"; color = "red"; }
+        if (aqi > 200) { status = "Very Unhealthy"; color = "purple"; }
 
-                    if (aqi >= 4) { status = "Poor"; color = "red"; }
-                    else if (aqi == 3) { status = "Moderate"; color = "orange"; }
+        document.getElementById("aqi-status").innerText = status;
+        document.getElementById("dash-aqi").style.color = color;
 
-                    document.getElementById("aqi-status").innerText = status;
-                    document.getElementById("dash-aqi").style.color = color;
+    }, () => {
+        alert("Location allow karo ❌");
+    });
+}
 
-                } catch (err) {
-                    document.getElementById("dash-aqi").innerText = "Error ❌";
-                }
+loadAQI();
 
-            }, () => {
-                alert("Location allow karo ❌");
-            });
-        }
+</script>
 
-        loadAQI();
-
-        // Chart
-        const ctx = document.getElementById('dashboardChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['12am','4am','8am','12pm','4pm','8pm'],
-                datasets: [{
-                    data: [35,38,65,52,48,42],
-                    borderColor: '#22C55E',
-                    fill: true
-                }]
-            }
-        });
-    </script>
 </body>
 </html>
