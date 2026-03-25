@@ -4,10 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PRABHAVA SYSTEMS | Smart Air Quality Monitoring</title>
+    <meta name="description" content="PRABHAVA SYSTEMS PRIVATE LIMITED - Intelligent environmental monitoring infrastructure for healthier cities.">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -17,7 +22,9 @@
 <nav class="navbar">
     <div class="container nav-container">
         <div class="logo">
-            <img src="logo.png" class="logo-img">
+            <a href="#home">
+                <img src="logo.png" alt="Logo" class="logo-img">
+            </a>
         </div>
         <ul class="nav-menu">
             <li><a href="#home" class="nav-link active">Home</a></li>
@@ -43,6 +50,7 @@
             </div>
         </div>
 
+        <!-- AQI BOX (UNCHANGED DESIGN) -->
         <div class="hero-image">
             <div class="product-mockup">
 
@@ -63,16 +71,24 @@
 </section>
 
 <!-- DASHBOARD PREVIEW -->
-<section id="dashboard">
+<section id="dashboard" class="dashboard-section">
     <div class="container">
         <canvas id="aqiChart"></canvas>
     </div>
 </section>
 
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="container">
+        <p>&copy; 2026 Prabhava Systems Pvt Ltd</p>
+    </div>
+</footer>
+
+<!-- SCRIPT -->
 <script>
 
-// 🌍 REAL AQI + CITY
-navigator.geolocation.getCurrentPosition(async (pos)=>{
+// 🌍 REAL AQI + CITY (NO DESIGN CHANGE)
+navigator.geolocation.getCurrentPosition(async (pos) => {
 
     const lat = pos.coords.latitude;
     const lon = pos.coords.longitude;
@@ -84,16 +100,22 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
         );
 
         const data = await res.json();
-
         const pm = data.list[0].components.pm2_5;
 
-        let aqi = Math.round((pm/35.4)*100);
+        // AQI CALCULATION
+        let aqi;
+        if (pm <= 12) aqi = (50/12)*pm;
+        else if (pm <= 35.4) aqi = ((100-51)/(35.4-12))*(pm-12)+51;
+        else if (pm <= 55.4) aqi = ((150-101)/(55.4-35.4))*(pm-35.4)+101;
+        else aqi = 200;
 
-        let status = "Good";
+        aqi = Math.round(aqi);
+
+        let status = "Excellent";
         let color = "#22c55e";
 
-        if(aqi > 50){ status = "Moderate"; color = "#facc15"; }
-        if(aqi > 100){ status = "Unhealthy"; color = "#ef4444"; }
+        if (aqi > 50) { status = "Moderate"; color = "#facc15"; }
+        if (aqi > 100) { status = "Unhealthy"; color = "#ef4444"; }
 
         document.getElementById("live-aqi-value").innerText = aqi;
         document.getElementById("live-aqi-value").style.color = color;
@@ -109,13 +131,13 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
         document.getElementById("live-city").innerText =
             "📍 " + (g.city || g.locality || g.principalSubdivision);
 
-    } catch(e) {
-        document.getElementById("live-aqi-status").innerText = "Error";
+    } catch (e) {
+        console.log(e);
     }
 
 });
 
-// 📊 GRAPH
+// 📊 GRAPH SAME
 new Chart(document.getElementById("aqiChart"), {
     type: "line",
     data: {
