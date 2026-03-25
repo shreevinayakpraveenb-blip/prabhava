@@ -6,7 +6,9 @@
     <title>Login - Prabhava Systems</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 🔥 CDN FIX -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body class="auth-page">
     <div class="auth-card animate-up">
@@ -17,13 +19,15 @@
         
         <form id="login-form" class="auth-form">
             <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" placeholder="name@company.com" required>
+                <label>Email Address</label>
+                <input type="email" id="email" required>
             </div>
+
             <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" placeholder="••••••••" required>
+                <label>Password</label>
+                <input type="password" id="password" required>
             </div>
+
             <button type="submit" class="btn btn-primary btn-block" id="login-btn">
                 <span>Log In</span>
             </button>
@@ -35,25 +39,43 @@
     </div>
 
     <script src="auth.js"></script>
+
     <script>
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
+        const form = document.getElementById('login-form');
+
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
+
             const btn = document.getElementById('login-btn');
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (!email || !password) {
+                alert("Fill all fields ❌");
+                return;
+            }
 
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
 
-            const { data, error } = await auth.signIn(email, password);
+            try {
+                const { data, error } = await auth.signIn(email, password);
 
-            if (error) {
-                showToast(error.message, 'error');
+                if (error) {
+                    alert(error.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<span>Log In</span>';
+                    return;
+                }
+
+                alert("Login successful ✅");
+                window.location.href = "dashboard.html";
+
+            } catch (err) {
+                console.log(err);
+                alert("Login failed ❌");
                 btn.disabled = false;
                 btn.innerHTML = '<span>Log In</span>';
-            } else {
-                showToast('Login successful! Redirecting...');
-                setTimeout(() => window.location.href = 'dashboard.html', 1000);
             }
         });
     </script>
