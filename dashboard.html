@@ -6,67 +6,156 @@
 <title>Dashboard</title>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body {
-    margin: 0;
+    margin:0;
     font-family: 'Segoe UI', sans-serif;
-    background: #f5f7fb;
+    background:#0f172a;
+    color:white;
+    display:flex;
 }
 
-.container {
-    padding: 20px;
+/* Sidebar */
+.sidebar {
+    width:220px;
+    background:#020617;
+    padding:20px;
+    height:100vh;
+}
+
+.sidebar h2 {
+    color:#22c55e;
+}
+
+.sidebar a {
+    display:block;
+    margin:15px 0;
+    color:#94a3b8;
+    text-decoration:none;
+}
+
+/* Main */
+.main {
+    flex:1;
+    padding:20px;
 }
 
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+/* Cards */
+.grid {
+    display:grid;
+    grid-template-columns: repeat(4,1fr);
+    gap:15px;
+    margin-top:20px;
 }
 
 .card {
-    background: white;
-    border-radius: 15px;
-    padding: 20px;
-    margin-top: 20px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    background:#1e293b;
+    padding:20px;
+    border-radius:15px;
 }
 
-.aqi-value {
-    font-size: 40px;
-    font-weight: bold;
+.big {
+    grid-column: span 2;
 }
 
-.good { color: #22c55e; }
-.moderate { color: orange; }
-.bad { color: red; }
-.verybad { color: purple; }
+.aqi {
+    font-size:40px;
+    font-weight:bold;
+}
+
+.good {color:#22c55e;}
+.moderate {color:#facc15;}
+.bad {color:#ef4444;}
+.verybad {color:#a855f7;}
 
 button {
-    padding: 10px 15px;
-    border: none;
-    background: red;
-    color: white;
-    border-radius: 8px;
-    cursor: pointer;
+    background:red;
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    color:white;
+}
+
+canvas {
+    height:250px !important;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<!-- Sidebar -->
+<div class="sidebar">
+    <h2>PRABHAVA</h2>
+    <a href="#">Dashboard</a>
+    <a href="#">Analytics</a>
+    <a href="#">Devices</a>
+    <a href="#">Alerts</a>
+</div>
+
+<!-- Main -->
+<div class="main">
 
     <div class="header">
         <h2 id="welcome-user">Loading...</h2>
         <button onclick="auth.signOut()">Logout</button>
     </div>
 
-    <div class="card">
-        <h3>AQI Index</h3>
-        <div id="dash-aqi" class="aqi-value">--</div>
-        <div id="aqi-status">--</div>
-        <div id="aqi-city">Detecting...</div>
+    <!-- Cards -->
+    <div class="grid">
+
+        <!-- AQI -->
+        <div class="card">
+            <h3>AQI</h3>
+            <div id="aqi" class="aqi">--</div>
+            <div id="status"></div>
+            <div id="city"></div>
+        </div>
+
+        <!-- PM2.5 -->
+        <div class="card">
+            <h3>PM2.5</h3>
+            <div id="pm25">--</div>
+        </div>
+
+        <!-- PM10 -->
+        <div class="card">
+            <h3>PM10</h3>
+            <div id="pm10">--</div>
+        </div>
+
+        <!-- NO2 -->
+        <div class="card">
+            <h3>NO2</h3>
+            <div id="no2">--</div>
+        </div>
+
+        <!-- O3 -->
+        <div class="card">
+            <h3>O3</h3>
+            <div id="o3">--</div>
+        </div>
+
+        <!-- CO -->
+        <div class="card">
+            <h3>CO</h3>
+            <div id="co">--</div>
+        </div>
+
+        <!-- Chart -->
+        <div class="card big">
+            <h3>Pollution Trend</h3>
+            <canvas id="chart"></canvas>
+        </div>
+
     </div>
 
 </div>
@@ -75,70 +164,66 @@ button {
 
 <script>
 
-// 🔐 Auth
-async function checkAuth() {
+// Auth
+async function checkAuth(){
     const user = await auth.getUser();
-
-    if (!user) {
-        window.location.href = "login.html";
-        return;
-    }
+    if(!user) window.location.href="login.html";
 
     document.getElementById("welcome-user").innerText =
         "Hello, " + (user.user_metadata?.full_name || user.email);
 }
 checkAuth();
 
-
-// 🌍 AQI + GPS
-navigator.geolocation.getCurrentPosition(async (pos) => {
+// AQI + DATA
+navigator.geolocation.getCurrentPosition(async (pos)=>{
 
     const lat = pos.coords.latitude;
     const lon = pos.coords.longitude;
 
-    // AQI API
     const res = await fetch(
         `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=38659b644448994cb2e78005cd7cbb1d`
     );
     const data = await res.json();
 
-    const pm25 = data.list[0].components.pm2_5;
+    const c = data.list[0].components;
 
-    function calculateAQI(pm) {
-        if (pm <= 12) return Math.round((50/12)*pm);
-        if (pm <= 35.4) return Math.round(((100-51)/(35.4-12))*(pm-12)+51);
-        if (pm <= 55.4) return Math.round(((150-101)/(55.4-35.4))*(pm-35.4)+101);
-        if (pm <= 150.4) return Math.round(((200-151)/(150.4-55.4))*(pm-55.4)+151);
-        if (pm <= 250.4) return Math.round(((300-201)/(250.4-150.4))*(pm-150.4)+201);
-        return 400;
-    }
+    document.getElementById("pm25").innerText = c.pm2_5;
+    document.getElementById("pm10").innerText = c.pm10;
+    document.getElementById("no2").innerText = c.no2;
+    document.getElementById("o3").innerText = c.o3;
+    document.getElementById("co").innerText = c.co;
 
-    const aqi = calculateAQI(pm25);
+    const aqi = Math.round((c.pm2_5/35.4)*100);
+    const aqiBox = document.getElementById("aqi");
 
-    const aqiBox = document.getElementById("dash-aqi");
-    const statusText = document.getElementById("aqi-status");
+    let status="Good", cls="good";
+    if(aqi>50){status="Moderate";cls="moderate";}
+    if(aqi>100){status="Unhealthy";cls="bad";}
+    if(aqi>200){status="Very Unhealthy";cls="verybad";}
 
     aqiBox.innerText = aqi;
+    aqiBox.className="aqi "+cls;
+    document.getElementById("status").innerText=status;
 
-    let status = "Good";
-    let className = "good";
+    // City
+    const geo = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}`);
+    const g = await geo.json();
+    document.getElementById("city").innerText = "📍 "+(g.city || g.locality);
 
-    if (aqi > 50) { status = "Moderate"; className = "moderate"; }
-    if (aqi > 100) { status = "Unhealthy"; className = "bad"; }
-    if (aqi > 200) { status = "Very Unhealthy"; className = "verybad"; }
+});
 
-    aqiBox.className = "aqi-value " + className;
-    statusText.innerText = status;
-
-    // 🌆 City
-    const geo = await fetch(
-        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}`
-    );
-    const geoData = await geo.json();
-
-    document.getElementById("aqi-city").innerText =
-        "📍 " + (geoData.city || geoData.locality);
-
+// Chart
+new Chart(document.getElementById("chart"),{
+    type:"line",
+    data:{
+        labels:["12AM","4AM","8AM","12PM","4PM","8PM"],
+        datasets:[{
+            label:"AQI Trend",
+            data:[80,90,120,110,100,95],
+            borderColor:"#22c55e",
+            fill:true
+        }]
+    }
 });
 
 </script>
