@@ -4,350 +4,132 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PRABHAVA SYSTEMS | Smart Air Quality Monitoring</title>
-    <meta name="description" content="PRABHAVA SYSTEMS PRIVATE LIMITED - Intelligent environmental monitoring infrastructure for healthier cities.">
-    <!-- Google Fonts: Inter and Poppins -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js for dashboard preview -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <!-- NAVBAR -->
-    <nav class="navbar">
-        <div class="container nav-container">
-            <div class="logo">
-                <a href="#home">
-                    <img src="logo.png" alt="PRABHAVA SYSTEMS Logo" class="logo-img">
-                </a>
-            </div>
-            <ul class="nav-menu">
-                <li><a href="#home" class="nav-link active">Home</a></li>
-                <li><a href="#about" class="nav-link">About</a></li>
-                <li><a href="#platform" class="nav-link">Platform</a></li>
-                <li><a href="#dashboard" class="nav-link">Dashboard</a></li>
-                <li><a href="#problem-solution" class="nav-link">Solutions</a></li>
-                <li><a href="team.html" class="nav-link">Team</a></li>
-                <li><a href="#contact" class="nav-link">Contact</a></li>
-            </ul>
-            <div class="mobile-toggle" id="mobile-toggle">
-                <span></span>
-                <span></span>
-                <span></span>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="container nav-container">
+        <div class="logo">
+            <img src="logo.png" class="logo-img">
+        </div>
+        <ul class="nav-menu">
+            <li><a href="#home" class="nav-link active">Home</a></li>
+            <li><a href="#about" class="nav-link">About</a></li>
+            <li><a href="#platform" class="nav-link">Platform</a></li>
+            <li><a href="#dashboard" class="nav-link">Dashboard</a></li>
+            <li><a href="team.html" class="nav-link">Team</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+    <div class="container hero-container">
+
+        <div class="hero-content">
+            <h1>Smart Air Quality Monitoring for Healthier Cities</h1>
+            <p>Advanced real-time environmental data for sustainable urban living.</p>
+
+            <div class="hero-buttons">
+                <a href="signup.html" class="btn btn-primary">Get Started</a>
+                <a href="login.html" class="btn btn-outline">Log In</a>
             </div>
         </div>
-    </nav>
 
-    <!-- HERO SECTION -->
-    <section class="hero" id="home">
-        <div class="container hero-container">
-            <div class="hero-content">
-                <h1>Smart Air Quality Monitoring for Healthier Cities</h1>
-                <p>Advanced real-time environmental data for sustainable urban living.</p>
-                <div class="hero-buttons">
-                        <a href="signup.html" class="btn btn-primary">Get Started</a>
-                        <a href="login.html" class="btn btn-outline">Log In</a>
-                    </div>
-            </div>
-            <div class="hero-image">
-                <div class="product-mockup">
-                    <div class="mockup-header">
-                        <i class="fas fa-leaf fa-2x" style="color: var(--eco-green);"></i>
-                    </div>
-                    <div class="aqi-display">
-                        <span class="aqi-label">AQI Index</span>
-                        <span class="aqi-value" id="live-aqi-value">42</span>
-                        <span class="aqi-status" id="live-aqi-status">Excellent</span>
-                    </div>
+        <div class="hero-image">
+            <div class="product-mockup">
+
+                <div class="aqi-display">
+                    <span class="aqi-label">AQI Index</span>
+
+                    <span class="aqi-value" id="live-aqi-value">--</span>
+
+                    <span class="aqi-status" id="live-aqi-status">Loading...</span>
+
+                    <span id="live-city" style="font-size:14px; color:#666;"></span>
                 </div>
+
             </div>
         </div>
-    </section>
 
-    <!-- ABOUT SECTION -->
-    <section id="about" class="about">
-        <div class="container">
-            <div class="section-header">
-                <h2>Our Mission</h2>
-                <div class="underline"></div>
-            </div>
-            <div class="about-grid">
-                <div class="about-text">
-                    <p>PRABHAVA SYSTEMS PRIVATE LIMITED is developing an advanced air quality monitoring ecosystem. The system deploys monitoring devices across cities to collect environmental data and transmit it to a centralized monitoring platform.</p>
-                    <p>This platform enables governments and organizations to monitor pollution levels in real time and take data-driven environmental actions.</p>
-                    
-                    <div class="capabilities-grid">
-                        <div class="capability-item">
-                            <i class="fas fa-chart-line"></i>
-                            <div>
-                                <h4>Real-time pollution monitoring</h4>
-                                <p>Continuous tracking of environmental parameters.</p>
-                            </div>
-                        </div>
-                        <div class="capability-item">
-                            <i class="fas fa-bell"></i>
-                            <div>
-                                <h4>Smart pollution alerts</h4>
-                                <p>Instant notifications when safety limits are exceeded.</p>
-                            </div>
-                        </div>
-                        <div class="capability-item">
-                            <i class="fas fa-database"></i>
-                            <div>
-                                <h4>Environmental data analytics</h4>
-                                <p>Deep insights for informed decision making.</p>
-                            </div>
-                        </div>
-                        <div class="capability-item">
-                            <i class="fas fa-city"></i>
-                            <div>
-                                <h4>Support for smart city governance</h4>
-                                <p>Enabling sustainable urban development.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+    </div>
+</section>
 
-    <!-- PLATFORM SECTION -->
-    <section id="platform" class="platform">
-        <div class="container">
-            <div class="section-header">
-                <h2>The Connectivity Platform</h2>
-                <p>Advanced connectivity for reliable environmental data</p>
-                <div class="underline"></div>
-            </div>
-            
-            <div class="platform-features">
-                <div class="feature-card">
-                    <i class="fas fa-broadcast-tower"></i>
-                    <h3>Connectivity</h3>
-                    <p>Devices connect to the platform using modern communication technologies:</p>
-                    <ul>
-                        <li>LoRaWAN networks</li>
-                        <li>WiFi connectivity</li>
-                        <li>4G / 5G communication modules</li>
-                    </ul>
-                </div>
-                
-                <div class="feature-card">
-                    <i class="fas fa-vials"></i>
-                    <h3>Indicators Measured</h3>
-                    <p>The monitoring system measures important environmental indicators such as:</p>
-                    <div class="indicator-tags">
-                        <span>PM2.5</span>
-                        <span>PM10</span>
-                        <span>Oxygen</span>
-                        <span>CO2</span>
-                        <span>CO</span>
-                        <span>Harmful Gases</span>
-                    </div>
-                </div>
-                
-                <div class="feature-card">
-                    <i class="fas fa-shield-alt"></i>
-                    <h3>Safety Alerts</h3>
-                    <p>If pollution exceeds safe limits, the platform automatically generates alerts and displays precaution recommendations.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+<!-- DASHBOARD PREVIEW -->
+<section id="dashboard">
+    <div class="container">
+        <canvas id="aqiChart"></canvas>
+    </div>
+</section>
 
-    <!-- DASHBOARD SECTION -->
-    <section id="dashboard" class="dashboard-section">
-        <div class="container">
-            <div class="dashboard-header">
-                <h2>Live Air Quality Status</h2>
-                <div class="status-legend">
-                    <span class="status-dot good"></span> Good
-                    <span class="status-dot moderate"></span> Moderate
-                    <span class="status-dot unhealthy"></span> Unhealthy
-                </div>
-            </div>
+<script>
 
-            <div class="metrics-grid">
-                <div class="metric-card animate-up">
-                    <span class="metric-label">PM2.5</span>
-                    <div class="metric-main">
-                        <span class="metric-value">12.4</span>
-                        <span class="metric-unit">µg/m³</span>
-                    </div>
-                    <span class="trend down"><i class="fas fa-arrow-down"></i> 2.4%</span>
-                </div>
-                <div class="metric-card animate-up" style="animation-delay: 0.1s;">
-                    <span class="metric-label">PM10</span>
-                    <div class="metric-main">
-                        <span class="metric-value">24.8</span>
-                        <span class="metric-unit">µg/m³</span>
-                    </div>
-                    <span class="trend down"><i class="fas fa-arrow-down"></i> 1.8%</span>
-                </div>
-                <div class="metric-card animate-up" style="animation-delay: 0.2s;">
-                    <span class="metric-label">CO2</span>
-                    <div class="metric-main">
-                        <span class="metric-value">412</span>
-                        <span class="metric-unit">ppm</span>
-                    </div>
-                    <span class="trend up"><i class="fas fa-arrow-up"></i> 0.4%</span>
-                </div>
-                <div class="metric-card animate-up" style="animation-delay: 0.3s;">
-                    <span class="metric-label">Oxygen</span>
-                    <div class="metric-main">
-                        <span class="metric-value">20.9</span>
-                        <span class="metric-unit">%</span>
-                    </div>
-                    <span class="trend stable">Stable</span>
-                </div>
-            </div>
+// 🌍 REAL AQI + CITY
+navigator.geolocation.getCurrentPosition(async (pos)=>{
 
-            <div class="chart-box animate-up" style="animation-delay: 0.4s;">
-                <div class="chart-header">
-                    <h3>Pollution Trends (Last 24 Hours)</h3>
-                    <div class="chart-actions">
-                        <span class="active">Live</span>
-                        <span>Daily</span>
-                        <span>Weekly</span>
-                    </div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="aqiChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </section>
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
 
-    <!-- SOLUTIONS SECTION -->
-    <section id="problem-solution" class="problem-solution">
-        <div class="container">
-            <div class="section-header">
-                <h2 style="color: white;">Our Solutions</h2>
-                <p style="opacity: 0.8;">Addressing urban pollution with technology</p>
-                <div class="underline" style="background-color: white;"></div>
-            </div>
-            <div class="split-grid">
-                <div class="problem-box">
-                    <div class="icon-circle"><i class="fas fa-exclamation-triangle"></i></div>
-                    <h3>The Problem</h3>
-                    <p>Air pollution is one of the most serious environmental challenges. Many cities lack real-time monitoring infrastructure, which makes it difficult for authorities to respond quickly when pollution levels rise.</p>
-                </div>
-                <div class="solution-box">
-                    <div class="icon-circle"><i class="fas fa-check-circle"></i></div>
-                    <h3>The Solution</h3>
-                    <p>PRABHAVA SYSTEMS provides a distributed air quality monitoring network that continuously measures environmental data and sends it to a centralized software platform. This enables authorities to monitor pollution levels and take immediate action to protect public health.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    try {
 
+        const res = await fetch(
+            `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=38659b644448994cb2e78005cd7cbb1d`
+        );
 
-    <!-- CONTACT SECTION -->
-    <section id="contact" class="contact">
-        <div class="container">
-            <div class="contact-wrapper">
-                <div class="contact-header">
-                    <h2>Contact Us</h2>
-                    <p>Partner with us for a cleaner, healthier future.</p>
-                </div>
-                
-                <div class="contact-card">
-                    <div class="contact-info">
-                        <h3>Get in Touch</h3>
-                        <p class="contact-desc">Have questions about our monitoring platform? Our team is here to help.</p>
-                        
-                        <div class="info-items">
-                            <div class="info-item">
-                                <div class="info-icon">
-                                    <i class="fas fa-envelope"></i>
-                                </div>
-                                <div class="info-content">
-                                    <span>Email Us</span>
-                                    <p>contact@prabhava.org</p>
-                                </div>
-                            </div>
-                            
-                            <div class="info-item">
-                                <div class="info-icon">
-                                    <i class="fas fa-phone"></i>
-                                </div>
-                                <div class="info-content">
-                                    <span>Call Us</span>
-                                    <p>+91 7395025167</p>
-                                </div>
-                            </div>
-                            
-                            <div class="info-item">
-                                <div class="info-icon">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                </div>
-                                <div class="info-content">
-                                    <span>Visit Us</span>
-                                    <p>Kanpur, Uttar Pradesh, India</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="contact-form-side">
-                        <form class="contact-form">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <input type="text" id="name" placeholder="Name" required>
-                                </div>
-                                <div class="form-group">
-                                    <input type="email" id="email" placeholder="Email" required>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <textarea id="message" rows="4" placeholder="How can we help?" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-cta btn-block">Send Message</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+        const data = await res.json();
 
-    <!-- FOOTER -->
-    <footer class="footer">
-        <div class="container footer-container">
-            <div class="footer-left">
-                <img src="logo.png" alt="PRABHAVA SYSTEMS Logo" class="footer-logo-small">
-                <p class="footer-desc">Smart environmental monitoring for healthier cities.</p>
-            </div>
-            
-            <div class="footer-center">
-                <h4>Quick Links</h4>
-                <ul class="footer-links">
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="#platform">Platform</a></li>
-                    <li><a href="#dashboard">Dashboard</a></li>
-                    <li><a href="#problem-solution">Solutions</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                </ul>
-            </div>
-            
-            <div class="footer-right">
-                <h4>Connect With Us</h4>
-                <div class="footer-social">
-                    <a href="https://www.instagram.com/prabhavasystems_pvt.limited" target="_blank" rel="noopener noreferrer" class="social-icon instagram"><i class="fab fa-instagram"></i></a>
-                    <a href="https://www.facebook.com/share/1GSfyPyCpY/" target="_blank" rel="noopener noreferrer" class="social-icon facebook"><i class="fab fa-facebook-f"></i></a>
-                    <a href="https://www.linkedin.com/company/prabhava-systems" target="_blank" rel="noopener noreferrer" class="social-icon linkedin"><i class="fab fa-linkedin-in"></i></a>
-                </div>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <div class="container">
-                <p>&copy; 2026 Prabhava Systems Pvt Ltd</p>
-            </div>
-        </div>
-    </footer>
+        const pm = data.list[0].components.pm2_5;
 
-    <script src="script.js"></script>
+        let aqi = Math.round((pm/35.4)*100);
+
+        let status = "Good";
+        let color = "#22c55e";
+
+        if(aqi > 50){ status = "Moderate"; color = "#facc15"; }
+        if(aqi > 100){ status = "Unhealthy"; color = "#ef4444"; }
+
+        document.getElementById("live-aqi-value").innerText = aqi;
+        document.getElementById("live-aqi-value").style.color = color;
+        document.getElementById("live-aqi-status").innerText = status;
+
+        // CITY
+        const geo = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}`
+        );
+
+        const g = await geo.json();
+
+        document.getElementById("live-city").innerText =
+            "📍 " + (g.city || g.locality || g.principalSubdivision);
+
+    } catch(e) {
+        document.getElementById("live-aqi-status").innerText = "Error";
+    }
+
+});
+
+// 📊 GRAPH
+new Chart(document.getElementById("aqiChart"), {
+    type: "line",
+    data: {
+        labels: ["12AM","4AM","8AM","12PM","4PM","8PM"],
+        datasets: [{
+            label: "AQI Trend",
+            data: [60,80,120,100,90,85],
+            borderColor: "#2563eb",
+            fill: true
+        }]
+    }
+});
+
+</script>
+
 </body>
 </html>
