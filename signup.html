@@ -5,54 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Signup</title>
 
+    <link rel="stylesheet" href="style.css">
+
+    <!-- ✅ Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
 
-<h2>Signup</h2>
+<div style="max-width:400px; margin:100px auto; text-align:center;">
+    <h2>Signup</h2>
 
-<form id="signup-form">
-    <input type="text" id="fullName" placeholder="Full Name" required><br><br>
-    <input type="email" id="email" placeholder="Email" required><br><br>
-    <input type="password" id="password" placeholder="Password" required><br><br>
+    <input type="text" id="name" placeholder="Full Name"><br><br>
+    <input type="email" id="email" placeholder="Email"><br><br>
+    <input type="password" id="password" placeholder="Password"><br><br>
 
-    <button type="submit" id="btn">Sign Up</button>
-</form>
-
-<script src="auth.js"></script>
+    <button onclick="signup()">Sign Up</button>
+</div>
 
 <script>
-document.getElementById("signup-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
 
-    const btn = document.getElementById("btn");
-    btn.innerText = "Processing...";
-    btn.disabled = true;
+// ✅ IMPORTANT FIX
+const client = supabase.createClient(
+    "https://pkgaxclfrhaguzbckfdx.supabase.co",
+    "sb_publishable_o9oXYMlV59VSZ_rznHdDKg_64yVVY1F"
+);
 
-    const name = document.getElementById("fullName").value;
+async function signup(){
+
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
+    const name = document.getElementById("name").value;
 
-    try {
-        const { data, error } = await auth.signUp(email, password, name);
-
-        if (error) {
-            alert(error.message);
-            btn.innerText = "Sign Up";
-            btn.disabled = false;
-            return;
+    const { data, error } = await client.auth.signUp({
+        email,
+        password,
+        options:{
+            data:{ full_name: name }
         }
+    });
 
-        alert("Signup success ✅");
+    if(error){
+        alert(error.message);
+    }else{
+        alert("Signup success!");
         window.location.href = "login.html";
-
-    } catch (err) {
-        alert("Error ❌");
-        console.log(err);
-        btn.innerText = "Sign Up";
-        btn.disabled = false;
     }
-});
+}
+
 </script>
 
 </body>
