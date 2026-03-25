@@ -1,28 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard</title>
 
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #f5f7fb;
+}
+
+.container {
+    padding: 20px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+.aqi-value {
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.good { color: #22c55e; }
+.moderate { color: orange; }
+.bad { color: red; }
+.verybad { color: purple; }
+
+button {
+    padding: 10px 15px;
+    border: none;
+    background: red;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+</style>
 </head>
 
-<body style="font-family: Arial; padding:20px;">
+<body>
 
-<h1 id="welcome-user">Loading...</h1>
+<div class="container">
 
-<h2>AQI: <span id="dash-aqi">--</span></h2>
-<h3 id="aqi-status">--</h3>
-<p id="aqi-city">Detecting location...</p>
+    <div class="header">
+        <h2 id="welcome-user">Loading...</h2>
+        <button onclick="auth.signOut()">Logout</button>
+    </div>
 
-<button onclick="auth.signOut()">Logout</button>
+    <div class="card">
+        <h3>AQI Index</h3>
+        <div id="dash-aqi" class="aqi-value">--</div>
+        <div id="aqi-status">--</div>
+        <div id="aqi-city">Detecting...</div>
+    </div>
+
+</div>
 
 <script src="auth.js"></script>
 
 <script>
 
-// 🔐 Auth Check
+// 🔐 Auth
 async function checkAuth() {
     const user = await auth.getUser();
 
@@ -32,75 +85,61 @@ async function checkAuth() {
     }
 
     document.getElementById("welcome-user").innerText =
-        "Hello " + (user.user_metadata?.full_name || user.email);
+        "Hello, " + (user.user_metadata?.full_name || user.email);
 }
-
 checkAuth();
 
 
-// 🔥 MAIN AQI FUNCTION
-async function loadAQI() {
+// 🌍 AQI + GPS
+navigator.geolocation.getCurrentPosition(async (pos) => {
 
-    if (!navigator.geolocation) {
-        alert("Location not supported ❌");
-        return;
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+
+    // AQI API
+    const res = await fetch(
+        `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=38659b644448994cb2e78005cd7cbb1d`
+    );
+    const data = await res.json();
+
+    const pm25 = data.list[0].components.pm2_5;
+
+    function calculateAQI(pm) {
+        if (pm <= 12) return Math.round((50/12)*pm);
+        if (pm <= 35.4) return Math.round(((100-51)/(35.4-12))*(pm-12)+51);
+        if (pm <= 55.4) return Math.round(((150-101)/(55.4-35.4))*(pm-35.4)+101);
+        if (pm <= 150.4) return Math.round(((200-151)/(150.4-55.4))*(pm-55.4)+151);
+        if (pm <= 250.4) return Math.round(((300-201)/(250.4-150.4))*(pm-150.4)+201);
+        return 400;
     }
 
-    navigator.geolocation.getCurrentPosition(async (pos) => {
+    const aqi = calculateAQI(pm25);
 
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
+    const aqiBox = document.getElementById("dash-aqi");
+    const statusText = document.getElementById("aqi-status");
 
-        // 🌫️ AQI API
-        const res = await fetch(
-            `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=38659b644448994cb2e78005cd7cbb1d`
-        );
+    aqiBox.innerText = aqi;
 
-        const data = await res.json();
+    let status = "Good";
+    let className = "good";
 
-        const pm25 = data.list[0].components.pm2_5;
+    if (aqi > 50) { status = "Moderate"; className = "moderate"; }
+    if (aqi > 100) { status = "Unhealthy"; className = "bad"; }
+    if (aqi > 200) { status = "Very Unhealthy"; className = "verybad"; }
 
-        // 🔥 REAL AQI CALCULATION
-        function calculateAQI(pm) {
-            if (pm <= 12) return Math.round((50/12)*pm);
-            if (pm <= 35.4) return Math.round(((100-51)/(35.4-12))*(pm-12)+51);
-            if (pm <= 55.4) return Math.round(((150-101)/(55.4-35.4))*(pm-35.4)+101);
-            if (pm <= 150.4) return Math.round(((200-151)/(150.4-55.4))*(pm-55.4)+151);
-            if (pm <= 250.4) return Math.round(((300-201)/(250.4-150.4))*(pm-150.4)+201);
-            return 400;
-        }
+    aqiBox.className = "aqi-value " + className;
+    statusText.innerText = status;
 
-        const aqi = calculateAQI(pm25);
+    // 🌆 City
+    const geo = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}`
+    );
+    const geoData = await geo.json();
 
-        document.getElementById("dash-aqi").innerText = aqi;
+    document.getElementById("aqi-city").innerText =
+        "📍 " + (geoData.city || geoData.locality);
 
-        // 📍 CITY NAME
-        const geo = await fetch(
-            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
-        );
-
-        const geoData = await geo.json();
-        const city = geoData.city || geoData.locality || geoData.principalSubdivision;
-
-        document.getElementById("aqi-city").innerText = "📍 " + city;
-
-        // 🎨 STATUS + COLOR
-        let status = "Good";
-        let color = "green";
-
-        if (aqi > 50) { status = "Moderate"; color = "orange"; }
-        if (aqi > 100) { status = "Unhealthy"; color = "red"; }
-        if (aqi > 200) { status = "Very Unhealthy"; color = "purple"; }
-
-        document.getElementById("aqi-status").innerText = status;
-        document.getElementById("dash-aqi").style.color = color;
-
-    }, () => {
-        alert("Location allow karo ❌");
-    });
-}
-
-loadAQI();
+});
 
 </script>
 
