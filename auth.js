@@ -1,13 +1,13 @@
 const SUPABASE_URL = 'https://pkgaxclfrhaguzbckfdx.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_o9oXYMlV59VSZ_rznHdDKg_64yVVY1F';
 
-// Initialize Supabase Client
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ✅ FIX: supabase variable ka naam change kiya
+const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Auth Helper Functions
 const auth = {
     async signUp(email, password, fullName) {
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await client.auth.signUp({
             email,
             password,
             options: {
@@ -18,7 +18,7 @@ const auth = {
     },
 
     async signIn(email, password) {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await client.auth.signInWithPassword({
             email,
             password
         });
@@ -26,22 +26,22 @@ const auth = {
     },
 
     async signOut() {
-        const { error } = await supabase.auth.signOut();
+        const { error } = await client.auth.signOut();
         if (!error) window.location.href = 'index.html';
         return { error };
     },
 
     async getUser() {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await client.auth.getUser();
         return user;
     },
 
     onAuthStateChange(callback) {
-        return supabase.auth.onAuthStateChange(callback);
+        return client.auth.onAuthStateChange(callback);
     }
 };
 
-// UI Components: Toast Notification
+// Toast
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type} animate-up`;
@@ -58,7 +58,7 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
-// Theme Handling
+// Theme
 function initTheme() {
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
