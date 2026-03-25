@@ -6,7 +6,9 @@
     <title>Dashboard - Prabhava Systems</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 🔥 CDN FIX -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="dashboard-page">
@@ -15,83 +17,32 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-logo">
-                <img src="logo.png" alt="Logo" height="40">
+                <img src="logo.png" height="40">
             </div>
+
             <nav class="sidebar-nav">
-                <a href="#" class="nav-item active"><i class="fas fa-th-large"></i> Overview</a>
-                <a href="#" class="nav-item"><i class="fas fa-chart-line"></i> Analytics</a>
-                <a href="#" class="nav-item"><i class="fas fa-microchip"></i> Devices</a>
-                <a href="#" class="nav-item"><i class="fas fa-bell"></i> Alerts</a>
-                <a href="#" class="nav-item"><i class="fas fa-cog"></i> Settings</a>
+                <a class="nav-item active">Overview</a>
             </nav>
+
             <div class="sidebar-footer">
-                <button onclick="toggleTheme()" class="nav-item btn-block" style="background:transparent; border:none; cursor:pointer;">
-                    <i id="theme-icon" class="fas fa-moon"></i> Dark Mode
-                </button>
-                <button onclick="auth.signOut()" class="nav-item btn-block" style="color: #EF4444; background:transparent; border:none; cursor:pointer;">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
+                <button onclick="auth.signOut()">Logout</button>
             </div>
         </aside>
 
-        <!-- Main Content -->
+        <!-- Main -->
         <main class="main-content">
-            <header class="dashboard-header-ui">
-                <div>
-                    <h1 id="welcome-user">Hello, User</h1>
-                    <p class="text-muted">Here's what's happening with your environment today.</p>
-                </div>
-                <div class="user-profile">
-                    <img src="https://ui-avatars.com/api/?name=User&background=random" id="user-avatar" alt="Avatar" style="width: 48px; height: 48px; border-radius: 50%;">
-                </div>
-            </header>
+            <h1 id="welcome-user">Hello User</h1>
 
-            <!-- Alert Section -->
-            <div class="alert-banner animate-up">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span><strong>High Alert:</strong> PM2.5 levels in your area have exceeded safe limits. Stay indoors.</span>
-            </div>
-
-            <!-- Stats Grid -->
             <div class="metrics-grid">
-                <div class="metric-card animate-up">
-                    <span class="metric-label">AQI Index</span>
-                    <div class="metric-main">
-                        <span class="metric-value" id="dash-aqi">Loading...</span>
-                        <span class="metric-unit" id="aqi-status">--</span>
-                    </div>
-                    <div class="trend" id="aqi-city">Detecting location...</div>
-                </div>
-
-                <div class="metric-card animate-up">
-                    <span class="metric-label">CO2 Levels</span>
-                    <div class="metric-main">
-                        <span class="metric-value">412</span>
-                        <span class="metric-unit">ppm</span>
-                    </div>
-                </div>
-
-                <div class="metric-card animate-up">
-                    <span class="metric-label">Temperature</span>
-                    <div class="metric-main">
-                        <span class="metric-value">24.5</span>
-                        <span class="metric-unit">°C</span>
-                    </div>
-                </div>
-
-                <div class="metric-card animate-up">
-                    <span class="metric-label">Humidity</span>
-                    <div class="metric-main">
-                        <span class="metric-value">58</span>
-                        <span class="metric-unit">%</span>
-                    </div>
+                <div class="metric-card">
+                    <h3>AQI</h3>
+                    <h2 id="dash-aqi">Loading...</h2>
+                    <p id="aqi-status">--</p>
+                    <p id="aqi-city">Detecting...</p>
                 </div>
             </div>
 
-            <!-- Chart -->
-            <div class="chart-box animate-up">
-                <canvas id="dashboardChart"></canvas>
-            </div>
+            <canvas id="dashboardChart"></canvas>
         </main>
     </div>
 
@@ -102,72 +53,66 @@
         async function checkAuth() {
             const user = await auth.getUser();
             if (!user) {
-                window.location.href = 'login.html';
+                window.location.href = "login.html";
                 return;
             }
 
-            const name = user.user_metadata?.full_name || user.email.split('@')[0];
-            document.getElementById('welcome-user').textContent = `Hello, ${name}`;
+            const name = user.user_metadata?.full_name || user.email;
+            document.getElementById("welcome-user").innerText = "Hello " + name;
         }
 
         checkAuth();
 
-        // 🌍 IP se location
-        async function getLocationFromIP() {
-            const res = await fetch("https://ipapi.co/json/");
-            const data = await res.json();
-            return {
-                lat: data.latitude,
-                lon: data.longitude,
-                city: data.city
-            };
-        }
-
-        // 🌫️ AQI fetch
-        async function getAQI(lat, lon) {
-            const apiKey = "38659b644448994cb2e78005cd7cbb1d"; // 🔥 yaha apni key daal
-
-            const res = await fetch(
-                `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`
-            );
-
-            const data = await res.json();
-            return data.list[0].main.aqi;
-        }
-
-        // 🎯 Main function
+        // 🌍 GPS AQI
         async function loadAQI() {
-            try {
-                const loc = await getLocationFromIP();
-                const aqi = await getAQI(loc.lat, loc.lon);
-
-                document.getElementById("dash-aqi").textContent = aqi;
-                document.getElementById("aqi-city").textContent = `📍 ${loc.city}`;
-
-                let status = "Good";
-                let color = "green";
-
-                if (aqi >= 4) { status = "Poor"; color = "red"; }
-                else if (aqi == 3) { status = "Moderate"; color = "orange"; }
-
-                document.getElementById("aqi-status").textContent = status;
-                document.getElementById("dash-aqi").style.color = color;
-
-            } catch (err) {
-                document.getElementById("dash-aqi").textContent = "Error";
+            if (!navigator.geolocation) {
+                alert("Location not supported ❌");
+                return;
             }
+
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+
+                try {
+                    const res = await fetch(
+                        `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=38659b644448994cb2e78005cd7cbb1d`
+                    );
+
+                    const data = await res.json();
+                    const aqi = data.list[0].main.aqi;
+
+                    document.getElementById("dash-aqi").innerText = aqi;
+                    document.getElementById("aqi-city").innerText = "📍 Your Location";
+
+                    let status = "Good";
+                    let color = "green";
+
+                    if (aqi >= 4) { status = "Poor"; color = "red"; }
+                    else if (aqi == 3) { status = "Moderate"; color = "orange"; }
+
+                    document.getElementById("aqi-status").innerText = status;
+                    document.getElementById("dash-aqi").style.color = color;
+
+                } catch (err) {
+                    document.getElementById("dash-aqi").innerText = "Error ❌";
+                }
+
+            }, () => {
+                alert("Location allow karo ❌");
+            });
         }
 
         loadAQI();
 
-        // 📊 Chart
+        // Chart
         const ctx = document.getElementById('dashboardChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['12am', '4am', '8am', '12pm', '4pm', '8pm'],
+                labels: ['12am','4am','8am','12pm','4pm','8pm'],
                 datasets: [{
-                    data: [35, 38, 65, 52, 48, 42],
+                    data: [35,38,65,52,48,42],
                     borderColor: '#22C55E',
                     fill: true
                 }]
