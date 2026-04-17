@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard</title>
+<title>AQI Dashboard</title>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -18,6 +18,8 @@ body {
 
 .container {
     padding:20px;
+    max-width:900px;
+    margin:auto;
 }
 
 .header {
@@ -32,6 +34,11 @@ body {
     border-radius:20px;
     box-shadow:0 10px 30px rgba(0,0,0,0.05);
     margin-top:20px;
+    transition: all 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
 }
 
 .grid {
@@ -47,6 +54,7 @@ body {
 .aqi {
     font-size:48px;
     font-weight:bold;
+    transition: all 0.3s ease;
 }
 
 .good {color:#22c55e;}
@@ -59,6 +67,13 @@ button {
     border:none;
     padding:10px 15px;
     border-radius:10px;
+    cursor:pointer;
+}
+
+.small {
+    font-size:12px;
+    color:gray;
+    margin-top:5px;
 }
 </style>
 </head>
@@ -72,12 +87,13 @@ button {
         <button onclick="auth.signOut()">Logout</button>
     </div>
 
-    <!-- AQI MAIN -->
+    <!-- AQI -->
     <div class="card">
         <h3>AQI Index</h3>
         <div id="aqi" class="aqi">--</div>
         <div id="status"></div>
         <div id="city"></div>
+        <div id="lastUpdated" class="small"></div>
     </div>
 
     <!-- POLLUTANTS -->
@@ -115,7 +131,7 @@ button {
 
 <script>
 
-// Auth
+// ---------- AUTH ----------
 async function checkAuth(){
     const user = await auth.getUser();
     if(!user) window.location.href="login.html";
@@ -125,7 +141,54 @@ async function checkAuth(){
 }
 checkAuth();
 
-// AQI
+// ---------- ANIMATION ----------
+function animateValue(id, newValue){
+    const el = document.getElementById(id);
+    const old = parseFloat(el.innerText) || 0;
+
+    let start = old;
+    let end = newValue;
+    let duration = 500;
+    let step = (end - start) / (duration / 16);
+
+    let current = start;
+
+    const timer = setInterval(()=>{
+        current += step;
+
+        if((step>0 && current>=end) || (step<0 && current<=end)){
+            current = end;
+            clearInterval(timer);
+        }
+
+        el.innerText = current.toFixed(1);
+
+    },16);
+}
+
+// ---------- CHART ----------
+let chart = new Chart(document.getElementById("chart"),{
+    type:"line",
+    data:{
+        labels:[],
+        datasets:[{
+            label:"AQI",
+            data:[],
+            borderColor:"#22c55e",
+            backgroundColor:"rgba(34,197,94,0.1)",
+            fill:true,
+            tension:0.4
+        }]
+    },
+    options:{
+        plugins:{legend:{display:false}},
+        scales:{y:{beginAtZero:true}}
+    }
+});
+
+// ---------- MAIN DATA ----------
+async function loadAQI(){
+
 navigator.geolocation.getCurrentPosition(async (pos)=>{
 
     const lat = pos.coords.latitude;
@@ -138,10 +201,10 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
     const data = await res.json();
     const c = data.list[0].components;
 
-    document.getElementById("pm25").innerText = c.pm2_5;
-    document.getElementById("pm10").innerText = c.pm10;
-    document.getElementById("no2").innerText = c.no2;
-    document.getElementById("o3").innerText = c.o3;
+    animateValue("pm25", c.pm2_5);
+    animateValue("pm10", c.pm10);
+    animateValue("no2", c.no2);
+    animateValue("o3", c.o3);
 
     const aqi = Math.round((c.pm2_5/35.4)*100);
 
@@ -149,29 +212,44 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
     if(aqi>50){status="Moderate";cls="moderate";}
     if(aqi>100){status="Unhealthy";cls="bad";}
 
-    document.getElementById("aqi").innerText = aqi;
+    animateValue("aqi", aqi);
+
     document.getElementById("aqi").className="aqi "+cls;
-    document.getElementById("status").innerText=status;
+    document.getElementById("status").innerHTML =
+        `<span class="${cls}">${status}</span>`;
 
-    // City
-    const geo = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}`);
+    // city
+    const geo = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}`
+    );
     const g = await geo.json();
-    document.getElementById("city").innerText = "📍 "+(g.city || g.locality);
 
-});
+    document.getElementById("city").innerText =
+        "📍 " + (g.city || g.locality);
 
-// Chart
-new Chart(document.getElementById("chart"),{
-    type:"line",
-    data:{
-        labels:["12AM","4AM","8AM","12PM","4PM","8PM"],
-        datasets:[{
-            data:[60,80,120,100,90,85],
-            borderColor:"#2563eb",
-            fill:true
-        }]
+    // last updated
+    document.getElementById("lastUpdated").innerText =
+        "Updated: " + new Date().toLocaleTimeString();
+
+    // chart update
+    const time = new Date().toLocaleTimeString();
+
+    chart.data.labels.push(time);
+    chart.data.datasets[0].data.push(aqi);
+
+    if(chart.data.labels.length > 12){
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
     }
+
+    chart.update();
+
 });
+}
+
+// ---------- AUTO REFRESH ----------
+loadAQI();
+setInterval(loadAQI, 10000);
 
 </script>
 
