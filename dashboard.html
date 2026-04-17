@@ -5,15 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AQI Dashboard</title>
 
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body {
     margin:0;
-    font-family:'Segoe UI', sans-serif;
+    font-family:sans-serif;
     background:#f5f7fb;
-    color:#111827;
 }
 
 .container {
@@ -22,59 +20,29 @@ body {
     margin:auto;
 }
 
-.header {
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
-
 .card {
     background:white;
     padding:20px;
-    border-radius:20px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.05);
+    border-radius:15px;
     margin-top:20px;
-    transition: all 0.2s ease;
-}
-
-.card:hover {
-    transform: translateY(-4px);
 }
 
 .grid {
     display:grid;
-    grid-template-columns: repeat(2,1fr);
+    grid-template-columns:repeat(2,1fr);
     gap:15px;
 }
 
-.big {
-    grid-column: span 2;
-}
+.big {grid-column:span 2;}
 
 .aqi {
-    font-size:48px;
+    font-size:40px;
     font-weight:bold;
-    transition: all 0.3s ease;
 }
 
-.good {color:#22c55e;}
-.moderate {color:#facc15;}
-.bad {color:#ef4444;}
-
-button {
-    background:#2563eb;
-    color:white;
-    border:none;
-    padding:10px 15px;
-    border-radius:10px;
-    cursor:pointer;
-}
-
-.small {
-    font-size:12px;
-    color:gray;
-    margin-top:5px;
-}
+.good {color:green;}
+.moderate {color:orange;}
+.bad {color:red;}
 </style>
 </head>
 
@@ -82,172 +50,98 @@ button {
 
 <div class="container">
 
-    <div class="header">
-        <h2 id="welcome-user">Loading...</h2>
-        <button onclick="auth.signOut()">Logout</button>
-    </div>
-
-    <!-- AQI -->
     <div class="card">
-        <h3>AQI Index</h3>
+        <h3>AQI</h3>
         <div id="aqi" class="aqi">--</div>
         <div id="status"></div>
-        <div id="city"></div>
-        <div id="lastUpdated" class="small"></div>
     </div>
 
-    <!-- POLLUTANTS -->
     <div class="grid">
-
-        <div class="card">
-            <h4>PM2.5</h4>
-            <div id="pm25">--</div>
-        </div>
-
-        <div class="card">
-            <h4>PM10</h4>
-            <div id="pm10">--</div>
-        </div>
-
-        <div class="card">
-            <h4>NO2</h4>
-            <div id="no2">--</div>
-        </div>
-
-        <div class="card">
-            <h4>O3</h4>
-            <div id="o3">--</div>
-        </div>
+        <div class="card"><h4>PM2.5</h4><div id="pm25">--</div></div>
+        <div class="card"><h4>PM10</h4><div id="pm10">--</div></div>
+        <div class="card"><h4>NO2</h4><div id="no2">--</div></div>
+        <div class="card"><h4>O3</h4><div id="o3">--</div></div>
 
         <div class="card big">
             <canvas id="chart"></canvas>
         </div>
-
     </div>
 
 </div>
 
-<script src="auth.js"></script>
-
 <script>
 
-// ---------- AUTH ----------
-async function checkAuth(){
-    const user = await auth.getUser();
-    if(!user) window.location.href="login.html";
-
-    document.getElementById("welcome-user").innerText =
-        "Hello, " + (user.user_metadata?.full_name || user.email);
-}
-checkAuth();
-
-// ---------- ANIMATION ----------
-function animateValue(id, newValue){
-    const el = document.getElementById(id);
-    const old = parseFloat(el.innerText) || 0;
-
-    let start = old;
-    let end = newValue;
-    let duration = 500;
-    let step = (end - start) / (duration / 16);
-
-    let current = start;
-
-    const timer = setInterval(()=>{
-        current += step;
-
-        if((step>0 && current>=end) || (step<0 && current<=end)){
-            current = end;
-            clearInterval(timer);
-        }
-
-        el.innerText = current.toFixed(1);
-
-    },16);
-}
-
-// ---------- CHART ----------
-let chart = new Chart(document.getElementById("chart"),{
-    type:"line",
-    data:{
-        labels:[],
-        datasets:[{
-            label:"AQI",
-            data:[],
-            borderColor:"#22c55e",
-            backgroundColor:"rgba(34,197,94,0.1)",
-            fill:true,
-            tension:0.4
+// -------- CHART --------
+let chart = new Chart(document.getElementById("chart"), {
+    type: "line",
+    data: {
+        labels: [],
+        datasets: [{
+            data: [],
+            borderColor: "#2563eb",
+            fill: false
         }]
-    },
-    options:{
-        plugins:{legend:{display:false}},
-        scales:{y:{beginAtZero:true}}
     }
 });
 
-// ---------- MAIN DATA ----------
+// -------- FETCH DATA --------
 async function loadAQI(){
 
-navigator.geolocation.getCurrentPosition(async (pos)=>{
+    try {
+        const lat = 28.6139; // Delhi fixed
+        const lon = 77.2090;
 
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
+        const res = await fetch(
+            `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=38659b644448994cb2e78005cd7cbb1d`
+        );
 
-    const res = await fetch(
-        `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=38659b644448994cb2e78005cd7cbb1d`
-    );
+        const data = await res.json();
 
-    const data = await res.json();
-    const c = data.list[0].components;
+        if(!data.list){
+            console.log("API error", data);
+            return;
+        }
 
-    animateValue("pm25", c.pm2_5);
-    animateValue("pm10", c.pm10);
-    animateValue("no2", c.no2);
-    animateValue("o3", c.o3);
+        const c = data.list[0].components;
 
-    const aqi = Math.round((c.pm2_5/35.4)*100);
+        // update values
+        document.getElementById("pm25").innerText = c.pm2_5;
+        document.getElementById("pm10").innerText = c.pm10;
+        document.getElementById("no2").innerText = c.no2;
+        document.getElementById("o3").innerText = c.o3;
 
-    let status="Good", cls="good";
-    if(aqi>50){status="Moderate";cls="moderate";}
-    if(aqi>100){status="Unhealthy";cls="bad";}
+        // AQI
+        const aqi = Math.round((c.pm2_5/35.4)*100);
 
-    animateValue("aqi", aqi);
+        let status="Good", cls="good";
+        if(aqi>50){status="Moderate";cls="moderate";}
+        if(aqi>100){status="Unhealthy";cls="bad";}
 
-    document.getElementById("aqi").className="aqi "+cls;
-    document.getElementById("status").innerHTML =
-        `<span class="${cls}">${status}</span>`;
+        const aqiEl = document.getElementById("aqi");
+        aqiEl.innerText = aqi;
+        aqiEl.className = "aqi " + cls;
 
-    // city
-    const geo = await fetch(
-        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}`
-    );
-    const g = await geo.json();
+        document.getElementById("status").innerText = status;
 
-    document.getElementById("city").innerText =
-        "📍 " + (g.city || g.locality);
+        // chart update
+        const time = new Date().toLocaleTimeString();
 
-    // last updated
-    document.getElementById("lastUpdated").innerText =
-        "Updated: " + new Date().toLocaleTimeString();
+        chart.data.labels.push(time);
+        chart.data.datasets[0].data.push(aqi);
 
-    // chart update
-    const time = new Date().toLocaleTimeString();
+        if(chart.data.labels.length > 10){
+            chart.data.labels.shift();
+            chart.data.datasets[0].data.shift();
+        }
 
-    chart.data.labels.push(time);
-    chart.data.datasets[0].data.push(aqi);
+        chart.update();
 
-    if(chart.data.labels.length > 12){
-        chart.data.labels.shift();
-        chart.data.datasets[0].data.shift();
+    } catch (err) {
+        console.log("ERROR:", err);
     }
-
-    chart.update();
-
-});
 }
 
-// ---------- AUTO REFRESH ----------
+// -------- AUTO REFRESH --------
 loadAQI();
 setInterval(loadAQI, 10000);
 
