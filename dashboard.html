@@ -25,6 +25,7 @@ body {
     padding:20px;
     border-radius:15px;
     margin-top:20px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.05);
 }
 
 .grid {
@@ -38,11 +39,18 @@ body {
 .aqi {
     font-size:40px;
     font-weight:bold;
+    transition:0.3s;
 }
 
-.good {color:green;}
-.moderate {color:orange;}
-.bad {color:red;}
+.good {color:#16a34a;}
+.moderate {color:#f59e0b;}
+.bad {color:#dc2626;}
+
+#status {
+    margin-top:5px;
+    font-size:14px;
+    color:#555;
+}
 </style>
 </head>
 
@@ -53,7 +61,7 @@ body {
     <div class="card">
         <h3>AQI</h3>
         <div id="aqi" class="aqi">--</div>
-        <div id="status"></div>
+        <div id="status">--</div>
     </div>
 
     <div class="grid">
@@ -71,24 +79,43 @@ body {
 
 <script>
 
-// -------- CHART --------
-let chart = new Chart(document.getElementById("chart"), {
+// ===== CHART INIT =====
+const ctx = document.getElementById("chart").getContext("2d");
+
+const chart = new Chart(ctx, {
     type: "line",
     data: {
         labels: [],
         datasets: [{
+            label: "AQI",
             data: [],
             borderColor: "#2563eb",
-            fill: false
+            borderWidth: 2,
+            tension: 0.4
         }]
+    },
+    options: {
+        animation: false,
+        scales: {
+            y: {
+                beginAtZero: false
+            }
+        }
     }
 });
 
-// -------- FETCH DATA --------
+// ===== AQI STATUS =====
+function getStatus(aqi){
+    if(aqi <= 50) return ["Good","good"];
+    if(aqi <= 100) return ["Moderate","moderate"];
+    return ["Unhealthy","bad"];
+}
+
+// ===== FETCH DATA =====
 async function loadAQI(){
 
     try {
-        const lat = 28.6139; // Delhi fixed
+        const lat = 28.6139;
         const lon = 77.2090;
 
         const res = await fetch(
@@ -98,24 +125,22 @@ async function loadAQI(){
         const data = await res.json();
 
         if(!data.list){
-            console.log("API error", data);
+            console.log("API error:", data);
             return;
         }
 
         const c = data.list[0].components;
 
-        // update values
-        document.getElementById("pm25").innerText = c.pm2_5;
-        document.getElementById("pm10").innerText = c.pm10;
-        document.getElementById("no2").innerText = c.no2;
-        document.getElementById("o3").innerText = c.o3;
+        // ===== UPDATE VALUES =====
+        document.getElementById("pm25").innerText = c.pm2_5 ?? "--";
+        document.getElementById("pm10").innerText = c.pm10 ?? "--";
+        document.getElementById("no2").innerText = c.no2 ?? "--";
+        document.getElementById("o3").innerText = c.o3 ?? "--";
 
-        // AQI
-        const aqi = Math.round((c.pm2_5/35.4)*100);
+        // ===== AQI CALC =====
+        const aqi = Math.round((c.pm2_5 / 35.4) * 100);
 
-        let status="Good", cls="good";
-        if(aqi>50){status="Moderate";cls="moderate";}
-        if(aqi>100){status="Unhealthy";cls="bad";}
+        const [status, cls] = getStatus(aqi);
 
         const aqiEl = document.getElementById("aqi");
         aqiEl.innerText = aqi;
@@ -123,12 +148,13 @@ async function loadAQI(){
 
         document.getElementById("status").innerText = status;
 
-        // chart update
+        // ===== CHART UPDATE =====
         const time = new Date().toLocaleTimeString();
 
         chart.data.labels.push(time);
         chart.data.datasets[0].data.push(aqi);
 
+        // keep last 10 points
         if(chart.data.labels.length > 10){
             chart.data.labels.shift();
             chart.data.datasets[0].data.shift();
@@ -141,7 +167,7 @@ async function loadAQI(){
     }
 }
 
-// -------- AUTO REFRESH --------
+// ===== AUTO REFRESH =====
 loadAQI();
 setInterval(loadAQI, 10000);
 
