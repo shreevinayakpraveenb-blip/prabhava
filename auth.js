@@ -4,28 +4,67 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const { createClient } = window.supabase;
 const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ================= AUTH =================
 const auth = {
-    async signUp(email, password, fullName) {
-        return await client.auth.signUp({
-            email,
-            password,
-            options: {
-                data: { full_name: fullName }
-            }
-        });
-    },
 
-    async signIn(email, password) {
-        return await client.auth.signInWithPassword({ email, password });
-    },
+  async signUp(email, password, fullName) {
+    const { data, error } = await client.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName }
+      }
+    });
 
-    async signOut() {
-        await client.auth.signOut();
-        window.location.href = 'index.html';
-    },
-
-    async getUser() {
-        const { data: { user } } = await client.auth.getUser();
-        return user;
+    if (error) {
+      alert(error.message);
+      return null;
     }
+
+    alert("Signup successful! Check your email.");
+    return data;
+  },
+
+  async signIn(email, password) {
+    const { data, error } = await client.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      alert(error.message);
+      return null;
+    }
+
+    // 🔥 redirect after login
+    window.location.href = "dashboard.html";
+    return data;
+  },
+
+  async signOut() {
+    await client.auth.signOut();
+    window.location.href = "index.html";
+  },
+
+  async getUser() {
+    const { data, error } = await client.auth.getUser();
+
+    if (error) {
+      console.log(error.message);
+      return null;
+    }
+
+    return data.user;
+  },
+
+  // 🔐 protect pages
+  async requireAuth() {
+    const user = await this.getUser();
+
+    if (!user) {
+      window.location.href = "index.html";
+    }
+
+    return user;
+  }
 };
